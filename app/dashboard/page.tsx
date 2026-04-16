@@ -10,15 +10,51 @@ const CAT_COLOR: Record<string,string> = {Cibo:"#D85A30",Trasporti:"#378ADD",Sva
 const CAT_BG: Record<string,string> = {Cibo:"#FAECE7",Trasporti:"#E6F1FB",Svago:"#EEEDFE",Casa:"#FAEEDA",Shopping:"#FBEAF0",Salute:"#E1F5EE",Abbonamenti:"#F1EFE8",Lavoro:"#EAF3DE",Regalo:"#FBEAF0",Rimborso:"#E1F5EE",Altro:"#F1EFE8"}
 const ACC_DOT: Record<string,string> = {bancoposta:"#185FA5",revolut:"#0F6E56",contanti:"#534AB7"}
 const ACC_BG: Record<string,string> = {bancoposta:"#E6F1FB",revolut:"#E1F5EE",contanti:"#EEEDFE"}
-
-const BATTUTE_ENTRATA = [
-  "Ohh guarda chi ha trovato soldi! 🎉",
-  "Stai diventando ricco! (quasi)",
-  "Il conto sorride, tu dovresti farlo di più",
-  "Entrata registrata. Ora non sperderla subito.",
-  "Bella busta! Ce la fai a non spenderla in 24 ore?",
+const BATTUTE_50 = [
+  "Benjamin Netanyahu ti sta osservando con invidia.",
+  "Lo Stato italiano vuole già il 22% di questa roba. Goditi il resto.",
+  "Meloni ha appena firmato un decreto per tassare anche questa entrata. Congratulazioni.",
+  "Pasquale Manna ha guadagnato meno di te oggi. Storico.",
+  "Sei ufficialmente più ricco di ieri. Durerà poco, ma goditela.",
+  "Il fisco ha già aperto un occhio. Buona fortuna.",
+  "Transferwise ha registrato un fremito. Benvenuto tra i paperoni.",
+  "Hai guadagnato. Ora il tuo cervello ti convincerà che puoi permetterti cose che non puoi.",
+  "Questo è il momento in cui ti senti ricco. Dura tipo tre giorni.",
 ]
 
+const BATTUTE_200 = [
+  "Pasquale Manna sta guardando il tuo saldo e piange.",
+  "Complimenti. Ora vai a spenderli tutti in una serata e poi piangi sul divano.",
+  "Il commercialista di Meloni ha sentito una perturbazione nella forza.",
+  "Con questi soldi potresti pagare 9 mesi di abbonamento Netflix. Oppure 5g di coca",
+  "Il governo italiano ha già un piano per come spendere questa cifra al posto tuo.",
+]
+
+const BATTUTE_USCITA = [
+  "Classico. Hai lavorato una settimana per svuotare il conto in un pomeriggio.",
+  "L'IVA ringrazia. Tu no.",
+  "Questa spesa è stata approvata da Giorgia Meloni — lei approva qualsiasi cosa ti faccia stare peggio.",
+  "Bello andarsene così. Domani ti arrabbi con te stesso, oggi è già fatto.",
+  "Spesa registrata. Il tuo conto ti guarda come un cane abbandonato.",
+  "Complimenti, hai appena finanziato l'economia italiana. Di niente.",
+  "Questa uscita è stata silenziosa ma devastante. Come un tradimento.",
+  "Soldi andati. Almeno hai il coraggio di guardare il saldo in faccia.",
+]
+
+const BATTUTE_ROSSO = [
+  "Tecnicamente sei più povero dello Stato italiano. E lo Stato italiano è messo malissimo.",
+  "Pasquale Manna ha più soldi di te in questo momento. Fatti una domanda.",
+  "Congratulazioni, hai raggiunto il livello 'conto in rosso'. Achievement sbloccato.",
+  "Sei in rosso. Anche l'app sta cercando di non dirtelo in modo brutale. Ci ha provato.",
+  "Il tuo conto ha mandato una mail di dimissioni. Non è andata bene.",
+  "Saldo negativo registrato. Respira. Ce la fai. Forse.",
+]
+
+function randomBattuta(tipo: 'entrata50' | 'entrata200' | 'uscita' | 'rosso') {
+  const map = { entrata50: BATTUTE_50, entrata200: BATTUTE_200, uscita: BATTUTE_USCITA, rosso: BATTUTE_ROSSO }
+  const arr = map[tipo]
+  return arr[Math.floor(Math.random() * arr.length)]
+}
 function fmt(n: number) { return new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(n||0) }
 function today() { return new Date().toISOString().split("T")[0] }
 function fmtDate(d: string) { if(!d)return""; return new Date(d+"T00:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"}) }
@@ -90,10 +126,28 @@ export default function Dashboard() {
     if (tx) setTransactions(prev => [tx, ...prev])
     setAccounts(prev => prev.map(a => a.id === form.accountId ? {...a, balance: a.balance + delta} : a))
 
-    if (form.type === 'entrata' && amount >= 50) {
-      setBattuta(randomBattuta())
+if (form.type === 'entrata' && amount >= 200) {
+      setBattuta(randomBattuta('entrata200'))
       setShowBattuta(true)
-      setTimeout(() => setShowBattuta(false), 4000)
+      setTimeout(() => setShowBattuta(false), 5000)
+    } else if (form.type === 'entrata' && amount >= 50) {
+      setBattuta(randomBattuta('entrata50'))
+      setShowBattuta(true)
+      setTimeout(() => setShowBattuta(false), 5000)
+    } else if (form.type === 'uscita' && amount >= 50) {
+      setBattuta(randomBattuta('uscita'))
+      setShowBattuta(true)
+      setTimeout(() => setShowBattuta(false), 5000)
+    }
+
+    const newTotal = accounts.reduce((s,a) => {
+      if (a.id !== form.accountId) return s + a.balance
+      return s + a.balance + (form.type === 'entrata' ? amount : -amount)
+    }, 0)
+    if (newTotal < 0) {
+      setBattuta(randomBattuta('rosso'))
+      setShowBattuta(true)
+      setTimeout(() => setShowBattuta(false), 5000)
     }
 
     setShowForm(false)
