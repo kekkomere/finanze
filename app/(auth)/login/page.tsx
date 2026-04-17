@@ -1,15 +1,10 @@
-'use client'
 // @ts-nocheck
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-interface Orb {
-  x: number; y: number; vx: number; vy: number
-  r: number; hue: number; alpha: number
-  hueTargets: number[]; hueIdx: number; hueT: number
-}
 
 const ORB_DEFS = [
   {vx:1.4,vy:1.1,r:160,hue:270,alpha:0.72,hueTargets:[270,290,260,280]},
@@ -23,8 +18,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const orbsRef = useRef<Orb[]>([])
+  const canvasRef = useRef(null)
+  const orbsRef = useRef([])
   const router = useRouter()
   const supabase = createClient()
 
@@ -33,12 +28,13 @@ export default function LoginPage() {
     if(!canvas) return
     const ctx = canvas.getContext('2d')
     if(!ctx) return
-    let animId: number
+    let animId
 
     function resize(){
-      if(!canvas) return
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      const c = canvasRef.current
+      if(!c) return
+      c.width = window.innerWidth
+      c.height = window.innerHeight
     }
     resize()
     window.addEventListener('resize', resize)
@@ -50,11 +46,11 @@ export default function LoginPage() {
       hueIdx:0, hueT:0,
     }))
 
-    function lerpHue(a:number,b:number,t:number){return a+(b-a)*t}
+    function lerpHue(a,b,t){return a+(b-a)*t}
 
     function draw(){
       const c = canvasRef.current
-      if(!c) return
+      if(!c || !ctx) return
       ctx.clearRect(0,0,c.width,c.height)
       const orbs = orbsRef.current
       orbs.forEach(o=>{
@@ -96,7 +92,7 @@ export default function LoginPage() {
     return()=>{cancelAnimationFrame(animId);window.removeEventListener('resize',resize)}
   },[])
 
-  async function handleLogin(e: React.FormEvent){
+  async function handleLogin(e){
     e.preventDefault();setLoading(true);setError('')
     const {error} = await supabase.auth.signInWithPassword({email,password})
     if(error){setError('Email o password non corretti');setLoading(false)}
@@ -113,7 +109,7 @@ export default function LoginPage() {
   }
   const labelStyle={
     fontSize:9,color:'rgba(255,255,255,0.35)',
-    letterSpacing:'0.1em',textTransform:'uppercase' as const,
+    letterSpacing:'0.1em',textTransform:'uppercase',
     display:'block',marginBottom:6,fontFamily:'Sora,sans-serif'
   }
 
@@ -156,7 +152,7 @@ export default function LoginPage() {
           <div style={{borderTop:'1px solid rgba(255,255,255,0.07)',marginTop:20,paddingTop:18,textAlign:'center'}}>
             <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',fontFamily:'Sora,sans-serif',fontWeight:300}}>
               non hai un account?{' '}
-              <Link href="/login" style={{color:'rgba(175,169,236,0.9)',textDecoration:'none',fontWeight:500}}>registrati</Link>
+              <Link href="/register" style={{color:'rgba(175,169,236,0.9)',textDecoration:'none',fontWeight:500}}>registrati</Link>
             </p>
           </div>
         </div>
